@@ -22,7 +22,6 @@ type CalendarOnChange = (
     event: React.MouseEvent<HTMLButtonElement>
 ) => void
 
-
 interface Props {
     venues: Venue[]
     bookings: Booking[]
@@ -38,7 +37,7 @@ type FormData = {
     end_date: string
     customerOption: 'existing' | 'new'
     existing_customer_id: number | ''
-    event_name: string              // new field
+    event_name: string
     customer: {
         organizer: string
         address: string
@@ -47,7 +46,6 @@ type FormData = {
         email: string
     }
 }
-
 
 export default function Create({ venues, bookings, customers, flash }: Props) {
     const [step, setStep] = useState(1)
@@ -60,7 +58,7 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
         end_date: '',
         customerOption: 'existing',
         existing_customer_id: '',
-        event_name: '',                  // initialize here
+        event_name: '',
         customer: {
             organizer: '',
             address: '',
@@ -69,7 +67,6 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
             email: '',
         },
     })
-
 
     // build blocked intervals per venue
     const blockedMap = bookings.reduce<Record<number, { start: Date; end: Date }[]>>(
@@ -143,13 +140,32 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
         setConflictError(null)
         setStep((s) => Math.min(2, s + 1))
     }
+
     function back() {
         setStep((s) => Math.max(1, s - 1))
     }
 
     function submit(e: React.FormEvent) {
         e.preventDefault()
-        post(route('orders.store'), {
+        
+        // Prepare the payload based on customer option
+        const payload: any = {
+            venues: data.venues,
+            start_date: data.start_date,
+            end_date: data.end_date,
+            event_name: data.event_name,
+            customerOption: data.customerOption
+        }
+        
+        // Only include relevant customer data based on the option
+        if (data.customerOption === 'existing') {
+            payload.existing_customer_id = data.existing_customer_id
+        } else {
+            payload.customer = data.customer
+        }
+        
+        // Use router.post instead of the form's post method
+        router.post(route('orders.store'), payload, {
             onSuccess: () => router.visit(route('orders.index')),
         })
     }
@@ -353,7 +369,6 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
                                 ))}
                             </div>
                         )}
-
 
                         <div className="flex justify-between">
                             <Button variant="secondary" onClick={back}>

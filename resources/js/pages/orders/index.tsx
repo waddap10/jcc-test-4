@@ -163,67 +163,69 @@ export default function Index() {
                                         </span>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex grid items-center gap-2">
-                                            {o.status === 0 ? (
-                                                /* only Konfirmasi */
-                                                <Button
-                                                    onClick={() => handleConfirm(o)}
-                                                    className="rounded bg-yellow-200 px-3 py-1 text-sm font-medium text-yellow-800 hover:bg-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
-                                                >
-                                                    Konfirmasi
-                                                </Button>
-                                            ) : (
-                                                /* Schedule, Beo, Acc Kanit */
-                                                <>
-                                                    {/* Schedule — green */}
-                                                    <Button
-                                                        asChild
-                                                        variant="default"
-                                                        size="sm"
-                                                        className="rounded bg-green-200 px-3 py-1 text-sm font-medium text-green-800 hover:bg-green-300 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                                                    >
-                                                        <Link href={route('orders.schedules.index', o.id)}>Schedule</Link>
-                                                    </Button>
+    <div className="flex grid items-center gap-2">
+        {/* Konfirmasi - show at status=0 and status_beo=0 */}
+        {o.status === 0 && o.status_beo === 0 && (
+            <Button
+                onClick={() => handleConfirm(o)}
+                className="rounded bg-yellow-200 px-3 py-1 text-sm font-medium text-yellow-800 hover:bg-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+            >
+                Konfirmasi
+            </Button>
+        )}
 
-                                                    {/* Beo — black & white */}
-                                                    <Button
-                                                        asChild
-                                                        variant="default"
-                                                        size="sm"
-                                                        className="rounded border border-black bg-black px-3 py-1 text-sm font-medium text-white hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:ring-offset-2 focus:outline-none"
-                                                    >
-                                                        <Link href={route('orders.beos.index', o.id)}>Beo</Link>
-                                                    </Button>
+        {/* Schedule, Beo, Acc Kanit - show at status=1 and status_beo=0 */}
+        {o.status === 1 && o.status_beo === 0 && (
+            <>
+                {/* Schedule — green */}
+                <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="rounded bg-green-200 px-3 py-1 text-sm font-medium text-green-800 hover:bg-green-300 focus:ring-2 focus:ring-green-400 focus:outline-none"
+                >
+                    <Link href={route('orders.schedules.index', o.id)}>Schedule</Link>
+                </Button>
 
-                                                    {/* Acc Kanit — purple */}
-                                                    <Button
-                                                        onClick={() => handleAccKanit(o)}
-                                                        className="rounded bg-purple-200 px-3 py-1 text-sm font-medium text-purple-800 hover:bg-purple-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                                                    >
-                                                        Acc Kanit
-                                                    </Button>
-                                                </>
-                                            )}
+                {/* Beo — black & white */}
+                <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="rounded border border-black bg-black px-3 py-1 text-sm font-medium text-white hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:ring-offset-2 focus:outline-none"
+                >
+                    <Link href={route('orders.beos.index', o.id)}>Beo</Link>
+                </Button>
 
-                                            {/* Selesai — only show when status_beo = 2 and status != 2 */}
-                                            {o.status_beo === 2 && o.status !== 2 && (
-                                                <Button
-                                                    onClick={() => handleSelesai(o)}
-                                                    className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                >
-                                                    Selesai
-                                                </Button>
-                                            )}
+                {/* Acc Kanit — purple */}
+                <Button
+                    onClick={() => handleAccKanit(o)}
+                    className="rounded bg-purple-200 px-3 py-1 text-sm font-medium text-purple-800 hover:bg-purple-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                >
+                    Acc Kanit
+                </Button>
+            </>
+        )}
 
-                                            {/* Delete — always here */}
-                                            <Button
-                                                onClick={() => handleDelete(o)}
-                                                className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:outline-none"
-                                            >
-                                                Delete
-                                            </Button>
-                                        </div>
-                                    </TableCell>
+        {/* Selesai - show at status=1 and status_beo=1 or 2 */}
+        {o.status === 1 && (o.status_beo === 1 || o.status_beo === 2) && (
+            <Button
+                onClick={() => handleSelesai(o)}
+                className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            >
+                Selesai
+            </Button>
+        )}
+
+        {/* Delete - always show except when both status=2 and status_beo=2 where only delete remains */}
+        <Button
+            onClick={() => handleDelete(o)}
+            className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:outline-none"
+        >
+            Delete
+        </Button>
+    </div>
+</TableCell>
                                 </TableRow>
                             );
                         })}
