@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/app-layout'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Megaphone, X } from 'lucide-react'
+import { Megaphone, X, Check, X as XIcon } from 'lucide-react'
 import { type BreadcrumbItem } from '@/types'
 
 interface Customer {
@@ -14,7 +14,7 @@ interface Customer {
   contact_person: string
   phone: string
   email: string
-  orders_count: number
+  k_l_status: number // Changed from orders_count to k_l_status
   created_at: string
 }
 
@@ -41,11 +41,6 @@ export default function CustomerIndex() {
   ]
 
   const handleDelete = (customer: Customer) => {
-    if (customer.orders_count > 0) {
-      alert('Cannot delete customer with existing orders.')
-      return
-    }
-
     if (confirm(`Are you sure you want to delete customer - ${customer.id}. ${customer.organizer}?`)) {
       destroy(route('customers.destroy', customer.id))
     }
@@ -115,7 +110,7 @@ export default function CustomerIndex() {
                 <TableHead>Contact Person</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="text-center">Orders</TableHead>
+                <TableHead className="text-center">K/L Status</TableHead>
                 <TableHead className="text-center">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -129,18 +124,28 @@ export default function CustomerIndex() {
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>{customer.email}</TableCell>
                   <TableCell className="text-center">
-                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {customer.orders_count}
-                    </span>
+                    <div className="flex items-center justify-center">
+                      {customer.k_l_status === 1 ? (
+                        <div className="flex items-center space-x-1">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="text-green-600 font-medium">Yes</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1">
+                          <XIcon className="h-5 w-5 text-red-600" />
+                          <span className="text-red-600 font-medium">No</span>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="space-x-2 text-center">
                     <Link href={route('customers.edit', customer.id)}>
                       <Button className="bg-blue-500 hover:bg-blue-700">Edit</Button>
                     </Link>
                     <Button
-                      disabled={processing || customer.orders_count > 0}
+                      disabled={processing}
                       onClick={() => handleDelete(customer)}
-                      className={`bg-red-500 hover:bg-red-700 ${customer.orders_count > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className="bg-red-500 hover:bg-red-700"
                     >
                       Delete
                     </Button>

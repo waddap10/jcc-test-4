@@ -14,7 +14,6 @@ class Schedule extends Model
         'end_date',
         'time_start',
         'time_end',
-        'venue_id',
         'function',
         'setup',
         'people',

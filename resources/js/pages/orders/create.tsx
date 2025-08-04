@@ -44,6 +44,7 @@ type FormData = {
         contact_person: string
         phone: string
         email: string
+        k_l_status: boolean
     }
 }
 
@@ -65,6 +66,7 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
             contact_person: '',
             phone: '',
             email: '',
+            k_l_status: false,
         },
     })
 
@@ -314,7 +316,14 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
                                     checked={data.customerOption === 'existing'}
                                     onChange={() => {
                                         setData('customerOption', 'existing')
-                                        setData('customer', { organizer: '', address: '', contact_person: '', phone: '', email: '' })
+                                        setData('customer', { 
+                                            organizer: '', 
+                                            address: '', 
+                                            contact_person: '', 
+                                            phone: '', 
+                                            email: '',
+                                            k_l_status: false
+                                        })
                                     }}
                                 />
                                 <span className="ml-2">Use Existing</span>
@@ -367,6 +376,46 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
                                         />
                                     </div>
                                 ))}
+                                
+                                {/* K/L Status Field */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="k_l_status">K/L Status</Label>
+                                    <div className="flex space-x-4">
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="k_l_status"
+                                                checked={data.customer.k_l_status === true}
+                                                onChange={() =>
+                                                    setData((cur) => ({
+                                                        ...cur,
+                                                        customer: { ...cur.customer, k_l_status: true },
+                                                    }))
+                                                }
+                                                className="mr-2"
+                                            />
+                                            <span className="text-green-600 font-medium">Yes</span>
+                                        </label>
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="k_l_status"
+                                                checked={data.customer.k_l_status === false}
+                                                onChange={() =>
+                                                    setData((cur) => ({
+                                                        ...cur,
+                                                        customer: { ...cur.customer, k_l_status: false },
+                                                    }))
+                                                }
+                                                className="mr-2"
+                                            />
+                                            <span className="text-red-600 font-medium">No</span>
+                                        </label>
+                                    </div>
+                                    {errors['customer.k_l_status'] && (
+                                        <p className="text-red-600">{errors['customer.k_l_status']}</p>
+                                    )}
+                                </div>
                             </div>
                         )}
 

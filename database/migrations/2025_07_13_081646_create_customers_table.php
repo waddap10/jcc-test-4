@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('contact_person')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
+             $table->boolean('k_l_status')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

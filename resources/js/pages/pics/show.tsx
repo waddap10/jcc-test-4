@@ -18,6 +18,7 @@ import {
   TableCaption,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Download, FileText } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 
 /**
@@ -26,7 +27,7 @@ import AppLayout from '@/layouts/app-layout';
 interface Venue {
   id: number;
   name: string;
-  address?: string;
+  short?: string;
 }
 
 interface Department {
@@ -34,34 +35,46 @@ interface Department {
   name: string;
 }
 
+interface Package {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface User {
   id: number;
   name: string;
+  email?: string;
+}
+
+interface Attachment {
+  id: number;
+  file_name: string;
+  created_at: string;
+  url: string;
 }
 
 interface Beo {
   id: number;
-  status: string;
-  pic?: string;
-  phone?: string;
-  description?: string;
+  notes?: string;
   department: Department;
+  package?: Package;
   user?: User;
+  attachments: Attachment[];
 }
 
 interface Schedule {
   id: number;
-  start_date?: string
-  end_date?: string
-  date?: string;           // ISO date string
-  time_start?: string;     // time string
-  time_end?: string;       // time string
-  time?: string;           // ISO datetime string (if single time field)
-  description: string;
-  venue?: Venue;
-  function?: number;
+  start_date?: string;
+  end_date?: string;
+  time_start?: string;
+  time_end?: string;
+  function?: string;
+  notes?: string;
   setup?: string;
   people?: number;
+  is_single_day?: boolean;
+  date_range?: string;
 }
 
 interface Order {
@@ -75,8 +88,15 @@ interface Order {
   contact_person: string;
   phone: string;
   email: string;
+  k_l_status?: boolean;
+  status: number;
+  status_beo: number;
+  status_label?: string;
+  beo_status_label?: string;
+  notes?: string;
   beos: Beo[];
   schedules: Schedule[];
+  venues: Venue[];
 }
 
 interface PageProps {
@@ -92,11 +112,12 @@ export default function Show() {
   const { order, flash } = usePage<PageProps>().props;
   const { processing, delete: destroy, patch } = useForm();
 
-  const functionLabels: Record<number, string> = {
-    1: 'Loading In',
-    2: 'Show',
-    3: 'Loading Out',
+  const functionLabels: Record<string, string> = {
+    '1': 'Loading In',
+    '2': 'Show',
+    '3': 'Loading Out',
   };
+
   // Helper function to safely format dates
   const formatDate = (dateString: string | null | undefined, formatStr: string = 'dd-MM-yyyy HH:mm'): string => {
     if (!dateString) return 'N/A';
@@ -108,6 +129,12 @@ export default function Show() {
     } catch (error) {
       console.error('Date formatting error:', error);
       return 'Invalid Date';
+    }
+  };
+
+  const handleAccKanit = (o: Order) => {
+    if (confirm(`Acc Kanit for #${o.id}?`)) {
+      patch(route('kanit.acc-kanit', o.id));
     }
   };
 
@@ -128,8 +155,20 @@ export default function Show() {
     return timeString;
   };
 
+  // Helper function to get status badge color
+  const getStatusBadgeColor = (status: number) => {
+    switch (status) {
+      case 0: return 'bg-gray-100 text-gray-800';
+      case 1: return 'bg-yellow-100 text-yellow-800';
+      case 2: return 'bg-blue-100 text-blue-800';
+      case 3: return 'bg-green-100 text-green-800';
+      case 4: return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const breadcrumbs = [
-    { title: 'Dashboard', href: route('kanit.dashboard') },
+    { title: 'Dashboard', href: route('pic.dashboard') },
     { title: `BEO: ${order.event_name}`, href: '#' },
   ];
 
@@ -138,7 +177,12 @@ export default function Show() {
       <Head title={`BEO: ${order.event_name}`} />
       <div className="space-y-6 p-6">
         {/* Title */}
-        <h1 className="text-3xl font-bold">BEO: {order.event_name}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">BEO: {order.event_name}</h1>
+          <div className="flex items-center gap-2">
+            
+          </div>
+        </div>
 
         {/* Flash Message */}
         {flash?.message && (
@@ -170,6 +214,16 @@ export default function Show() {
                 <span className="text-gray-500">Tidak ada department</span>
               )}
             </p>
+            {order.venues && order.venues.length > 0 && (
+              <p>
+                <strong>Venues:</strong>{' '}
+                {order.venues.map((venue, index) => (
+                  <span key={venue.id}>
+                    {venue.name}{index < order.venues.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -188,6 +242,17 @@ export default function Show() {
             <p><strong>Contact Person:</strong> {order.contact_person || 'N/A'}</p>
             <p><strong>Phone:</strong> {order.phone || 'N/A'}</p>
             <p><strong>Email:</strong> {order.email || 'N/A'}</p>
+            {order.k_l_status !== undefined && (
+              <p>
+                <strong>K/L Status:</strong>{' '}
+                <Badge className={order.k_l_status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  {order.k_l_status ? 'Yes' : 'No'}
+                </Badge>
+              </p>
+            )}
+            {order.notes && (
+              <p><strong>Notes:</strong> {order.notes}</p>
+            )}
           </CardContent>
         </Card>
 
@@ -203,9 +268,8 @@ export default function Show() {
 
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
+                    <TableHead>Date Range</TableHead>
                     <TableHead>Time Range</TableHead>
-                    <TableHead>Venue</TableHead>
                     <TableHead>Function</TableHead>
                     <TableHead>Setup</TableHead>
                     <TableHead className="text-right">People</TableHead>
@@ -216,41 +280,37 @@ export default function Show() {
                   {order.schedules?.length > 0 ? (
                     order.schedules.map((schedule) => (
                       <TableRow key={schedule.id} className="hover:bg-gray-50">
-                        {/* Date - show range or single date */}
+                        {/* Date Range */}
                         <TableCell>
-                          {(() => {
-                            if (!schedule.start_date && !schedule.end_date) return 'N/A';
+                          {schedule.date_range || (
+                            (() => {
+                              if (!schedule.start_date && !schedule.end_date) return 'N/A';
 
-                            const startDate = schedule.start_date ? parseISO(schedule.start_date) : null;
-                            const endDate = schedule.end_date ? parseISO(schedule.end_date) : null;
+                              const startDate = schedule.start_date ? parseISO(schedule.start_date) : null;
+                              const endDate = schedule.end_date ? parseISO(schedule.end_date) : null;
 
-                            if (!startDate && !endDate) return 'N/A';
-                            if (!endDate && startDate) return format(startDate, 'dd/MM/yy');
-                            if (!startDate && endDate) return format(endDate, 'dd/MM/yy');
+                              if (!startDate && !endDate) return 'N/A';
+                              if (!endDate && startDate) return format(startDate, 'dd/MM/yy');
+                              if (!startDate && endDate) return format(endDate, 'dd/MM/yy');
 
-                            // If same day, show one date; otherwise show a range
-                            return startDate && endDate && startDate.getTime() === endDate.getTime()
-                              ? format(startDate, 'dd/MM/yy')
-                              : `${startDate ? format(startDate, 'dd/MM/yy') : 'N/A'} – ${endDate ? format(endDate, 'dd/MM/yy') : 'N/A'}`;
-                          })()}
+                              return startDate && endDate && startDate.getTime() === endDate.getTime()
+                                ? format(startDate, 'dd/MM/yy')
+                                : `${startDate ? format(startDate, 'dd/MM/yy') : 'N/A'} – ${endDate ? format(endDate, 'dd/MM/yy') : 'N/A'}`;
+                            })()
+                          )}
                         </TableCell>
 
-                        {/* Time Range - HH:mm format */}
+                        {/* Time Range */}
                         <TableCell>
                           {schedule.time_start && schedule.time_end ? (
                             `${formatTime(schedule.time_start)} – ${formatTime(schedule.time_end)}`
                           ) : 'N/A'}
                         </TableCell>
 
-                        {/* Venue */}
+                        {/* Function */}
                         <TableCell>
-                          {schedule.venue?.name || 'N/A'}
-                        </TableCell>
-
-                        {/* Function - map enum to label */}
-                        <TableCell>
-                          {schedule.function !== undefined && schedule.function !== null
-                            ? (functionLabels[schedule.function as keyof typeof functionLabels] ?? 'Unknown')
+                          {schedule.function 
+                            ? (functionLabels[schedule.function] || schedule.function)
                             : '—'
                           }
                         </TableCell>
@@ -262,13 +322,13 @@ export default function Show() {
 
                         {/* People - right aligned */}
                         <TableCell className="text-right">
-                          {schedule.people || 0}
+                          {schedule.people ? `${schedule.people} people` : '—'}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-gray-500">
+                      <TableCell colSpan={5} className="text-center text-gray-500">
                         No schedules added yet.
                       </TableCell>
                     </TableRow>
@@ -289,9 +349,10 @@ export default function Show() {
                   <TableRow>
                     <TableHead>#</TableHead>
                     <TableHead>Department</TableHead>
+                    <TableHead>Package</TableHead>
                     <TableHead>PIC</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Attachments</TableHead>
+                    <TableHead>Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -299,11 +360,46 @@ export default function Show() {
                     order.beos.map((beo, index) => (
                       <TableRow key={beo.id}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{beo.department.name}</TableCell>
-                        <TableCell>{beo.pic || beo.user?.name || 'N/A'}</TableCell>
-                        <TableCell>{beo.phone || 'N/A'}</TableCell>
-
-                        <TableCell>{beo.description || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{beo.department.name}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {beo.package ? (
+                            <div className="space-y-1">
+                              <Badge variant="secondary">{beo.package.name}</Badge>
+                              {beo.package.description && (
+                                <div className="text-xs text-gray-600">
+                                  {beo.package.description}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{beo.user?.name || 'N/A'}</TableCell>
+                        <TableCell>
+                          {beo.attachments && beo.attachments.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {beo.attachments.map((attachment) => (
+                                <a
+                                  key={attachment.id}
+                                  href={attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100"
+                                  title={`Download ${attachment.file_name}`}
+                                >
+                                  <Download className="h-3 w-3" />
+                                  <span className="max-w-20 truncate">{attachment.file_name}</span>
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-500">No files</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{beo.notes || '—'}</TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -318,7 +414,17 @@ export default function Show() {
             </CardContent>
           </Card>
         </div>
-        
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
+          
+          
+          <Link href={route('pic.dashboard')}>
+            <Button variant="outline">
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
       </div>
     </AppLayout>
   );

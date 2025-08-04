@@ -12,18 +12,32 @@ class VenueSeeder extends Seeder
      */
     public function run(): void
     {
+        $venueShort = [
+            'Hall A',
+            'Corridor',
+            'Hall B',
+            'Cendrawasih',
+            'Plenary',
+            'Assembly',
+            'Merak',
+            'Nuri',
+            'Kakaktua',
+            'Kenari',
+            'Murai',
+            'Maleo',
+            'Summit',
+            'Kasuari',
+            'Meeting 1',
+            'Meeting 2',
+        ];
+
         $venueNames = [
             'Exhibition Hall A',
-            'Pre-Function Exhibition Hall A',
             'Connecting Corridor',
             'Exhibition Hall B',
-            'Pre-Function Exhibition Hall B',
             'Cendrawasih Room',
-            'Lobby Cendrawasih',
             'Plenary Hall',
-            'Lobby Plenary',
             'Assembly Hall',
-            'Lobby Assembly',
             'Merak Room',
             'Nuri Room',
             'Kakaktua Room',
@@ -36,8 +50,13 @@ class VenueSeeder extends Seeder
             'Meeting Room 2',
         ];
 
-        foreach ($venueNames as $name) {
-            Venue::factory()->create(['name' => $name]);
+        $venues = array_combine($venueNames, $venueShort);
+
+        foreach ($venues as $name => $short) {
+            Venue::factory()->create([
+                'name' => $name,
+                'short' => $short,
+            ]);
         }
     }
 }

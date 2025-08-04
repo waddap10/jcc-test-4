@@ -9,6 +9,9 @@ import {
   subDays,
   addDays,
   parse,
+  addHours,
+  isBefore,
+  isAfter,
 } from 'date-fns'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -26,11 +29,6 @@ import moment from 'moment'
 const toMoment = (t: string) =>
   t ? moment(t, 'HH:mm') : undefined
 
-
-interface Venue {
-  id: number
-  name: string
-}
 
 interface Schedule {
   id: number
@@ -51,16 +49,14 @@ interface ScheduleForm extends Record<string, string> {
   end_date: string
   time_start: string
   time_end: string
-  venue_id: string
   function: string
   setup: string
   people: string
 }
 
 export default function Create() {
-  const { order, venues, flash = {}, errors = {} } = usePage<{
+  const { order, flash = {}, errors = {} } = usePage<{
     order: Order
-    venues: Venue[]
     flash?: { message?: string }
     errors: Record<string, string>
   }>().props
@@ -75,7 +71,6 @@ export default function Create() {
         end_date: '',
         time_start: '',
         time_end: '',
-        venue_id: '',
         function: '',
         setup: '',
         people: '',
@@ -119,9 +114,11 @@ export default function Create() {
     field: keyof ScheduleForm,
     value: string
   ) {
+    console.log(`Updating schedule ${idx}, field: ${field}, value: ${value}`); // Debug log
     const next = data.schedules.map((row, i) =>
       i === idx ? { ...row, [field]: value } : row
     )
+    console.log('New schedules array:', next); // Debug log
     setData('schedules', next)
   }
 
@@ -148,7 +145,6 @@ export default function Create() {
     })
   }
 
-
   // Calendar onChange: handle Date OR [Date,Date]
   function handleRangeChange(idx: number): CalendarProps['onChange'] {
     return (value) => {
@@ -165,6 +161,23 @@ export default function Create() {
     }
   }
 
+  // Helper function to filter available end times
+  const filterEndTimes = (time: Date, startTime: string) => {
+    if (!startTime) return false
+    
+    const startDate = parse(startTime, 'HH:mm', new Date())
+    const maxEndDate = addHours(startDate, 12)
+    
+    // Handle case where max time crosses midnight
+    if (maxEndDate.getDate() > startDate.getDate()) {
+      // Time spans across midnight
+      return time > startDate || time <= maxEndDate
+    } else {
+      // Normal case - same day
+      return time > startDate && time <= maxEndDate
+    }
+  }
+
   // Add / Remove schedule rows
   const addSchedule = () => {
     setData('schedules', [
@@ -174,7 +187,6 @@ export default function Create() {
         end_date: '',
         time_start: '',
         time_end: '',
-        venue_id: '',
         function: '',
         setup: '',
         people: '',
@@ -218,7 +230,7 @@ export default function Create() {
         )}
 
         <h1 className="text-xl font-semibold">
-          Add Schedule(s) to “{order.event_name}”
+          Add Schedule(s) to "{order.event_name}"
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -243,8 +255,8 @@ export default function Create() {
                   selectRange
                   value={selectedRanges[idx] as any}
                   onChange={handleRangeChange(idx)}
-                  minDate={subDays(parseISO(order.start_date), 1)}
-                  maxDate={addDays(parseISO(order.end_date), 1)}
+                  minDate={parseISO(order.start_date)}
+                  maxDate={parseISO(order.end_date)}
                   tileClassName={({ date, view }) => {
                     if (view !== 'month') return
                     if (
@@ -274,12 +286,18 @@ export default function Create() {
                             : null
                         }
                         onChange={(date) => {
+                          console.log('Start time selected:', date); // Debug log
                           if (date) {
-                            updateSchedule(
-                              idx,
-                              'time_start',
-                              format(date, 'HH:mm')
+                            const timeString = format(date, 'HH:mm');
+                            console.log('Formatted time string:', timeString); // Debug log
+                            
+                            // Update both start time and clear end time in single call
+                            const next = data.schedules.map((row, i) =>
+                              i === idx 
+                                ? { ...row, time_start: timeString, time_end: '' }
+                                : row
                             )
+                            setData('schedules', next)
                           }
                         }}
                         showTimeSelect
@@ -289,6 +307,10 @@ export default function Create() {
                         className="w-full rounded border px-3 py-2"
                         placeholderText="Select start…"
                       />
+                      {/* Debug display */}
+                      <div className="text-xs text-gray-500 mt-1">
+                        Current value: {sch.time_start || 'empty'}
+                      </div>
                     </div>
 
                     {/* End Time Picker */}
@@ -315,25 +337,10 @@ export default function Create() {
                         dateFormat="HH:mm"
                         className="w-full rounded border px-3 py-2"
                         placeholderText="Select end…"
+                        disabled={!sch.time_start}
+                        filterTime={(time) => filterEndTimes(time, sch.time_start)}
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block font-medium">Venue</label>
-                    <select
-                      value={sch.venue_id}
-                      onChange={(e) =>
-                        updateSchedule(idx, 'venue_id', e.target.value)
-                      }
-                      className="w-full rounded border px-3 py-2"
-                    >
-                      <option value="">— Choose venue —</option>
-                      {venues.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
 

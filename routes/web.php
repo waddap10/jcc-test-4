@@ -8,6 +8,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PicController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\VenueController;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -30,17 +31,28 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
         ->name('orders.destroy');
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->name('orders.status.update');
-    Route::get('calendars', [OrderController::class, 'calendar'])->name('orders.calendar');
+    Route::get('calendars', [OrderController::class, 'calendar'])
+        ->name('orders.calendar');
     Route::patch('/orders/{order}/acc-kanit', [OrderController::class, 'accKanit'])
         ->name('orders.acc-kanit');
     Route::resource('orders.schedules', ScheduleController::class)
         ->only(['index', 'create', 'store', 'destroy']);
-    Route::resource('orders.beos', BeoController::class)
-        ->only(['index', 'create', 'store', 'destroy']);
+    Route::prefix('orders/{order}/beos')->name('orders.beos.')->group(function () {
+        Route::get('/', [BeoController::class, 'index'])->name('index');
+        Route::get('/create', [BeoController::class, 'create'])->name('create');
+        Route::post('/', [BeoController::class, 'store'])->name('store');
+        Route::get('/edit', [BeoController::class, 'edit'])->name('edit');
+        Route::post('/update', [BeoController::class, 'update'])->name('update');  
+        Route::delete('/{beo}', [BeoController::class, 'destroy'])->name('destroy');
+    });
     Route::resource('departments', DepartmentController::class)
         ->only(['index', 'create', 'store', 'destroy']);
-        Route::resource('customers', CustomerController::class);
-    
+    Route::resource('customers', CustomerController::class);
+    /* Route::get('/orders/{order}/beos/edit', [BeoController::class, 'edit'])
+        ->name('orders.beos.edit');
+    Route::post('/orders/{order}/beos', [BeoController::class, 'update'])
+        ->name('orders.beos.update'); */
+
     // Venue routes  
     Route::resource('venues', VenueController::class);
     Route::patch('orders/{order}/selesai', [OrderController::class, 'markSelesai'])
@@ -70,7 +82,7 @@ Route::middleware(['auth', 'role:kanit'])
         Route::patch('/orders/{order}/status', [KanitController::class, 'updateStatus'])
             ->name('orders.status.update');
         Route::patch('/{order}/acc-kanit', [KanitController::class, 'accKanit'])
-        ->name('acc-kanit');
+            ->name('acc-kanit');
     });
 
 /* Route::middleware(['auth', 'verified', 'role:kanit'])->group(function () {

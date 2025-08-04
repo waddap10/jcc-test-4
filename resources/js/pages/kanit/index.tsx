@@ -72,6 +72,8 @@ export default function Index() {
                 return { label: 'Sudah Kirim Ke Kanit', bgcolor: '#FFF59D' }; // light yellow
             case 2:
                 return { label: 'Sudah Acc Kanit', bgcolor: '#90CAF9' }; // light blue
+            case 3:
+                return { label: 'Di edit', bgcolor: '#ff9100ff' }; // light blue
             default:
                 return { label: 'Unknown', bgcolor: '#E0E0E0' }; // gray
         }
@@ -140,7 +142,7 @@ export default function Index() {
                                         </span>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="rounded px-2 py-1 text-sm" style={{ backgroundColor: status.bgcolor }}>
+                                        <span className="rounded px-2 py-1 text-sm" style={{ backgroundColor: status_beo.bgcolor }}>
                                             {status_beo.label}
                                         </span>
                                     </TableCell>

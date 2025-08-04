@@ -50,7 +50,7 @@ export default function Index() {
     };
 
     const handleAccKanit = (o: Order) => {
-      if (confirm(`Acc Kanit for #${o.id}?`)) {
+        if (confirm(`Acc Kanit for #${o.id}?`)) {
             patch(route('orders.acc-kanit', o.id));
         }
     };
@@ -77,6 +77,7 @@ export default function Index() {
                 return { label: 'Sudah Konfirmasi', bgcolor: '#FFF59D' }; // light yellow
             case 2:
                 return { label: 'Sudah dilaksanakan', bgcolor: '#90CAF9' }; // light blue
+            
             default:
                 return { label: 'Unknown', bgcolor: '#E0E0E0' }; // gray
         }
@@ -90,6 +91,8 @@ export default function Index() {
                 return { label: 'Sudah Kirim Ke Kanit', bgcolor: '#FFF59D' }; // light yellow
             case 2:
                 return { label: 'Sudah Acc Kanit', bgcolor: '#90CAF9' }; // light blue
+            case 3:
+                return { label: 'Di edit', bgcolor: '#ff9100ff' }; // light blue
             default:
                 return { label: 'Unknown', bgcolor: '#E0E0E0' }; // gray
         }
@@ -164,8 +167,8 @@ export default function Index() {
                                     </TableCell>
                                     <TableCell>
     <div className="flex grid items-center gap-2">
-        {/* Konfirmasi - show at status=0 and status_beo=0 */}
-        {o.status === 0 && o.status_beo === 0 && (
+        {/* Konfirmasi - show when status = 0 */}
+        {o.status === 0 && (
             <Button
                 onClick={() => handleConfirm(o)}
                 className="rounded bg-yellow-200 px-3 py-1 text-sm font-medium text-yellow-800 hover:bg-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
@@ -174,8 +177,8 @@ export default function Index() {
             </Button>
         )}
 
-        {/* Schedule, Beo, Acc Kanit - show at status=1 and status_beo=0 */}
-        {o.status === 1 && o.status_beo === 0 && (
+        {/* Schedule, Beo, Acc Kanit - show when status != 0 */}
+        {o.status !== 0 && (
             <>
                 {/* Schedule — green */}
                 <Button
@@ -207,8 +210,8 @@ export default function Index() {
             </>
         )}
 
-        {/* Selesai - show at status=1 and status_beo=1 or 2 */}
-        {o.status === 1 && (o.status_beo === 1 || o.status_beo === 2) && (
+        {/* Selesai - show only when status = 1 */}
+        {o.status === 1 && (
             <Button
                 onClick={() => handleSelesai(o)}
                 className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -217,7 +220,7 @@ export default function Index() {
             </Button>
         )}
 
-        {/* Delete - always show except when both status=2 and status_beo=2 where only delete remains */}
+        {/* Delete - always show */}
         <Button
             onClick={() => handleDelete(o)}
             className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:outline-none"

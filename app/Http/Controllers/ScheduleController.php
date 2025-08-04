@@ -50,7 +50,6 @@ class ScheduleController extends Controller
             'date_format:H:i',
             'after_or_equal:schedules.*.time_start',
         ],
-        'schedules.*.venue_id'       => ['required', 'exists:venues,id'],
         'schedules.*.function'       => ['required', 'in:1,2,3'],
         'schedules.*.setup'          => ['nullable', 'string', 'max:255'],
         'schedules.*.people'         => ['required', 'integer', 'min:1'],

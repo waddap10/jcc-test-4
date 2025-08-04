@@ -110,7 +110,6 @@ export default function Index() {
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Time Range</TableHead>
-              <TableHead>Venue</TableHead>
               <TableHead>Function</TableHead>
               <TableHead>Setup</TableHead>
               <TableHead className="text-right">People</TableHead>
@@ -148,7 +147,7 @@ export default function Index() {
                     )}
                   </TableCell>
 
-                  <TableCell>{s.venue.name}</TableCell>
+                  
 
                   {/* map enum to label */}
                   <TableCell>

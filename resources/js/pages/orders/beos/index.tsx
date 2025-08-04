@@ -13,10 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Edit3, Trash2, Megaphone } from 'lucide-react';
+import { Edit3, Trash2, Megaphone, Paperclip } from 'lucide-react';
 import {route} from 'ziggy-js';
 
 interface Department { id: number; name: string; }
+interface Package { id: number; name: string; }
 interface User {
   id:       number;
   name:     string;
@@ -24,12 +25,21 @@ interface User {
   phone:    string;
 }
 
+interface BeoAttachment {
+  id: number;
+  beo_id: number;
+  file_name: string;
+  created_at: string;
+}
+
 interface Beo {
   id:          number;
   department?: Department;
+  package?:      Package;
   user?:       User;
-  description: string | null;
+  notes:       string | null;
   created_at:  string;
+  attachments?: BeoAttachment[];
 }
 
 interface Order { id: number; event_name: string; }
@@ -75,25 +85,36 @@ export default function Index() {
         </div>
       )}
 
-      <div className="m-4">
+      <div className="m-4 flex space-x-2">
         <Link href={route('orders.beos.create', [order.id])}>
           <Button className="rounded bg-black px-4 py-2 text-white hover:bg-white hover:text-black">
             New Assignment
           </Button>
         </Link>
+        
+        {beos.length > 0 && (
+          <Link href={route('orders.beos.edit', [order.id])}>
+            <Button variant="outline" className="rounded px-4 py-2">
+              <Edit3 className="h-4 w-4 mr-2" />
+              Edit All
+            </Button>
+          </Link>
+        )}
       </div>
 
       {beos.length > 0 ? (
         <div className="m-4 overflow-auto">
           <Table>
-            <TableCaption>Assignments for “{order.event_name}”</TableCaption>
+            <TableCaption>Assignments for "{order.event_name}"</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Department</TableHead>
+                <TableHead>Paket</TableHead>
                 <TableHead>PIC</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead>Attachments</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -102,21 +123,35 @@ export default function Index() {
                 <TableRow key={b.id}>
                   <TableCell>{b.id}</TableCell>
                   <TableCell>{b.department?.name ?? '—'}</TableCell>
+                  <TableCell>{b.package?.name      ?? '—'}</TableCell>
                   <TableCell>{b.user?.name       ?? '—'}</TableCell>
                   <TableCell>{b.user?.phone      ?? '—'}</TableCell>
-                  <TableCell>{b.description       ?? '—'}</TableCell>
+                  <TableCell>{b.notes            ?? '—'}</TableCell>
+                  <TableCell>
+                    {b.attachments && b.attachments.length > 0 ? (
+                      <div className="flex items-center space-x-1">
+                        <Paperclip className="h-4 w-4" />
+                        <span className="text-sm">{b.attachments.length}</span>
+                        <div className="space-y-1 max-w-32">
+                          {b.attachments.map((attachment) => (
+                            <div key={attachment.id} className="text-xs text-blue-600 truncate">
+                              <a 
+                                href={`/storage/beo-attachments/${attachment.file_name}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {attachment.file_name}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </TableCell>
                   <TableCell className="space-x-2 text-right">
-                    {/* Uncomment to enable editing */}
-                    {/* 
-                    <Link 
-                      href={route('orders.beos.edit', [order.id, b.id])} 
-                      as="button"
-                    >
-                      <Button size="sm" variant="outline" className="p-1" disabled={processing}>
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                    </Link> 
-                    */}
                     <Button
                       size="sm"
                       variant="outline"

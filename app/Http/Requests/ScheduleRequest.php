@@ -26,7 +26,6 @@ class ScheduleRequest extends FormRequest
         'schedules.*.date'      => 'required|date|after_or_equal:'.$this->order->start_date.'|before_or_equal:'.$this->order->end_date,
         'schedules.*.time_start'=> 'required|date_format:H:i',
         'schedules.*.time_end'  => 'required|date_format:H:i|after:schedules.*.time_start',
-        'schedules.*.venue_id'  => 'required|exists:venues,id',
         'schedules.*.function'  => 'required|in:1,2,3',
         'schedules.*.setup'     => 'required|string|max:255',
         'schedules.*.people'    => 'required|integer|min:1',

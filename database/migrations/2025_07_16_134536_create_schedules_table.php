@@ -17,7 +17,6 @@ return new class extends Migration
             $table->date('end_date');
             $table->time('time_start');
             $table->time('time_end');
-            $table->foreignId('venue_id')->constrained()->onDelete('cascade');
             $table->enum('function', [1, 2, 3]);
             $table->string('setup');
             $table->unsignedInteger('people');
