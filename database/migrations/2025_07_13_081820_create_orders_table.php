@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->string('custom_code', 20)->unique();
             $table->string('event_name')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
@@ -20,6 +22,8 @@ return new class extends Migration
                 ->comment('0=New Inquiry,1=Sudah Confirm GBK dan JICC,2=Sudah Dilaksanakan');
             $table->tinyInteger('status_beo')->unsigned()->default(0);
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
+            $table->integer('discount')->nullable()
+                ->comment('Diskon dalam persen, misal 10 untuk 10%');
             $table->timestamps();
             $table->softDeletes();
         });

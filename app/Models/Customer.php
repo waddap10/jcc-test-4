@@ -15,7 +15,6 @@ class Customer extends Model
         'address',
         'contact_person',
         'phone',
-        'k_l_status',
         'email',
     ];
 
