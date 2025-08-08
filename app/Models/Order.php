@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'custom_code',
+        'event_id',
         'event_name',
         'start_date',
         'end_date',

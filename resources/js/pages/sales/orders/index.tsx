@@ -16,8 +16,15 @@ interface Customer {
     organizer: string;
 }
 
+interface Event {
+    id: number;
+    event_type: string;
+    code: string;
+}
+
 interface Order {
     id: number;
+    custom_code: string;
     event_name: string;
     customer?: Customer;
     start_date?: string;
@@ -25,6 +32,7 @@ interface Order {
     status: number;
     status_beo: number;
     venues?: Venue[];
+    event?: Event;
 }
 
 interface PageProps {
@@ -38,25 +46,25 @@ export default function Index() {
     const { processing, delete: destroy, patch } = useForm();
 
     const handleDelete = (o: Order) => {
-        if (confirm(`Delete #${o.id}: ${o.event_name}?`)) {
+        if (confirm(`Delete #${o.custom_code}: ${o.event_name}?`)) {
             destroy(route('orders.destroy', o.id));
         }
     };
 
     const handleConfirm = (o: Order) => {
-        if (confirm(`Konfirmasi pesanan #${o.id} ?`)) {
+        if (confirm(`Konfirmasi pesanan #${o.custom_code} ?`)) {
             patch(route('orders.status.update', o.id));
         }
     };
 
     const handleAccKanit = (o: Order) => {
-        if (confirm(`Acc Kanit for #${o.id}?`)) {
+        if (confirm(`Acc Kanit for #${o.custom_code}?`)) {
             patch(route('orders.acc-kanit', o.id));
         }
     };
 
     const handleSelesai = (o: Order) => {
-        if (confirm(`Mark order #${o.id} as completed?`)) {
+        if (confirm(`Mark order #${o.custom_code} as completed?`)) {
             patch(route('orders.selesai', o.id));
         }
     };
@@ -77,7 +85,7 @@ export default function Index() {
                 return { label: 'Sudah Konfirmasi', bgcolor: '#FFF59D' }; // light yellow
             case 2:
                 return { label: 'Sudah dilaksanakan', bgcolor: '#90CAF9' }; // light blue
-            
+
             default:
                 return { label: 'Unknown', bgcolor: '#E0E0E0' }; // gray
         }
@@ -92,7 +100,7 @@ export default function Index() {
             case 2:
                 return { label: 'Sudah Acc Kanit', bgcolor: '#90CAF9' }; // light blue
             case 3:
-                return { label: 'Di edit', bgcolor: '#ff9100ff' }; // light blue
+                return { label: 'Di edit', bgcolor: '#ff9100ff' }; // orange
             default:
                 return { label: 'Unknown', bgcolor: '#E0E0E0' }; // gray
         }
@@ -121,8 +129,9 @@ export default function Index() {
                     <TableCaption>List of all orders</TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>ID</TableHead>
+                            <TableHead>Code</TableHead>
                             <TableHead>Event Name</TableHead>
+                            <TableHead>Event Type</TableHead>
                             <TableHead>Organizer</TableHead>
                             <TableHead>Schedule</TableHead>
                             <TableHead>Venues</TableHead>
@@ -139,8 +148,11 @@ export default function Index() {
 
                             return (
                                 <TableRow key={o.id}>
-                                    <TableCell>{o.id}</TableCell>
+                                    <TableCell className="font-mono">{o.custom_code}</TableCell>
                                     <TableCell>{o.event_name}</TableCell>
+                                    <TableCell>
+                                        {o.event?.event_type ?? '—'}
+                                    </TableCell>
                                     <TableCell>{o.customer?.organizer ?? '—'}</TableCell>
                                     <TableCell>{range}</TableCell>
 
@@ -166,69 +178,77 @@ export default function Index() {
                                         </span>
                                     </TableCell>
                                     <TableCell>
-    <div className="flex grid items-center gap-2">
-        {/* Konfirmasi - show when status = 0 */}
-        {o.status === 0 && (
-            <Button
-                onClick={() => handleConfirm(o)}
-                className="rounded bg-yellow-200 px-3 py-1 text-sm font-medium text-yellow-800 hover:bg-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
-            >
-                Konfirmasi
-            </Button>
-        )}
+                                        <div className="flex grid items-center gap-2">
+                                            {/* Konfirmasi - show when status = 0 */}
+                                            {o.status === 0 && (
+                                                <Button
+                                                    onClick={() => handleConfirm(o)}
+                                                    className="rounded bg-yellow-200 px-3 py-1 text-sm font-medium text-yellow-800 hover:bg-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                                >
+                                                    Konfirmasi
+                                                </Button>
+                                            )}
 
-        {/* Schedule, Beo, Acc Kanit - show when status != 0 */}
-        {o.status !== 0 && (
-            <>
-                {/* Schedule — green */}
-                <Button
-                    asChild
-                    variant="default"
-                    size="sm"
-                    className="rounded bg-green-200 px-3 py-1 text-sm font-medium text-green-800 hover:bg-green-300 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                >
-                    <Link href={route('orders.schedules.index', o.id)}>Schedule</Link>
-                </Button>
+                                            {/* Schedule, Beo, Acc Kanit - show when status != 0 */}
+                                            {o.status !== 0 && (
+                                                <>
+                                                    {/* Schedule — green */}
+                                                    <Button
+                                                        asChild
+                                                        variant="default"
+                                                        size="sm"
+                                                        className="rounded bg-green-200 px-3 py-1 text-sm font-medium text-green-800 hover:bg-green-300 focus:ring-2 focus:ring-green-400 focus:outline-none"
+                                                    >
+                                                        <Link href={route('orders.schedules.index', o.id)}>Schedule</Link>
+                                                    </Button>
 
-                {/* Beo — black & white */}
-                <Button
-                    asChild
-                    variant="default"
-                    size="sm"
-                    className="rounded border border-black bg-black px-3 py-1 text-sm font-medium text-white hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:ring-offset-2 focus:outline-none"
-                >
-                    <Link href={route('orders.beos.index', o.id)}>Beo</Link>
-                </Button>
+                                                    {/* Beo — black & white */}
+                                                    <Button
+                                                        asChild
+                                                        variant="default"
+                                                        size="sm"
+                                                        className="rounded border border-black bg-black px-3 py-1 text-sm font-medium text-white hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:ring-offset-2 focus:outline-none"
+                                                    >
+                                                        <Link href={route('orders.beos.index', o.id)}>Beo</Link>
+                                                    </Button>
+                                                    {/* Attachment — gray */}
+                                                    <Button
+                                                        asChild
+                                                        variant="default"
+                                                        size="sm"
+                                                        className="rounded bg-gray-200 px-3 py-1 text-sm font-medium text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+                                                    >
+                                                        <Link href={route('orders.attachments.index', o.id)}>Attachment</Link>
+                                                    </Button>
+                                                    {/* Acc Kanit — purple */}
+                                                    <Button
+                                                        onClick={() => handleAccKanit(o)}
+                                                        className="rounded bg-purple-200 px-3 py-1 text-sm font-medium text-purple-800 hover:bg-purple-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+                                                    >
+                                                        Acc Kanit
+                                                    </Button>
+                                                </>
+                                            )}
 
-                {/* Acc Kanit — purple */}
-                <Button
-                    onClick={() => handleAccKanit(o)}
-                    className="rounded bg-purple-200 px-3 py-1 text-sm font-medium text-purple-800 hover:bg-purple-300 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-                >
-                    Acc Kanit
-                </Button>
-            </>
-        )}
+                                            {/* Selesai - show only when status = 1 */}
+                                            {o.status === 1 && (
+                                                <Button
+                                                    onClick={() => handleSelesai(o)}
+                                                    className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                >
+                                                    Selesai
+                                                </Button>
+                                            )}
 
-        {/* Selesai - show only when status = 1 */}
-        {o.status === 1 && (
-            <Button
-                onClick={() => handleSelesai(o)}
-                className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
-                Selesai
-            </Button>
-        )}
-
-        {/* Delete - always show */}
-        <Button
-            onClick={() => handleDelete(o)}
-            className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:outline-none"
-        >
-            Delete
-        </Button>
-    </div>
-</TableCell>
+                                            {/* Delete - always show */}
+                                            <Button
+                                                onClick={() => handleDelete(o)}
+                                                className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:outline-none"
+                                            >
+                                                Delete
+                                            </Button>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             );
                         })}

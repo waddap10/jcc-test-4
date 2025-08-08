@@ -11,11 +11,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { CustomerCombobox } from '@/components/customer-combobox'
 import { type BreadcrumbItem } from '@/types'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MouseEvent as ReactMouseEvent } from 'react'
 
 type Venue = { id: number; name: string }
 type Booking = { venue_id: number; start_date: string; end_date: string }
 type Customer = { id: number; organizer: string }
+type Event = { id: number; event_type: string; code: string }
 type CalendarValue = Date | Date[] | null
 type CalendarOnChange = (
     value: CalendarValue,
@@ -26,6 +28,7 @@ interface Props {
     venues: Venue[]
     bookings: Booking[]
     customers: Customer[]
+    events: Event[]
     flash?: { message?: string }
 }
 
@@ -38,6 +41,8 @@ type FormData = {
     customerOption: 'existing' | 'new'
     existing_customer_id: number | ''
     event_name: string
+    event_id: number | ''
+    discount: number
     customer: {
         organizer: string
         address: string
@@ -48,7 +53,7 @@ type FormData = {
     }
 }
 
-export default function Create({ venues, bookings, customers, flash }: Props) {
+export default function Create({ venues, bookings, customers, events, flash }: Props) {
     const [step, setStep] = useState(1)
     const [search, setSearch] = useState('')
     const [conflictError, setConflictError] = useState<string | null>(null)
@@ -60,6 +65,8 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
         customerOption: 'existing',
         existing_customer_id: '',
         event_name: '',
+        event_id: '',
+        discount: 0,
         customer: {
             organizer: '',
             address: '',
@@ -156,6 +163,7 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
             start_date: data.start_date,
             end_date: data.end_date,
             event_name: data.event_name,
+            event_id: data.event_id,
             customerOption: data.customerOption
         }
         
@@ -175,6 +183,15 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
     const filteredCustomers = customers.filter((c) =>
         c.organizer.toLowerCase().includes(search.toLowerCase())
     )
+
+    // Group events by event_type for better organization
+    const groupedEvents = events.reduce<Record<string, Event[]>>((acc, event) => {
+        if (!acc[event.event_type]) {
+            acc[event.event_type] = []
+        }
+        acc[event.event_type].push(event)
+        return acc
+    }, {})
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Orders', href: '/orders' }, { title: 'Create', href: '' }]}>
@@ -292,7 +309,7 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
                 )}
                 {step === 2 && (
                     <div className="space-y-6">
-                        <h2 className="text-xl font-semibold">Step 2: Customer & Event</h2>
+                        <h2 className="text-xl font-semibold">Step 2: Event & Customer</h2>
 
                         {/* Event Name */}
                         <div className="space-y-2 mb-4">
@@ -308,6 +325,56 @@ export default function Create({ venues, bookings, customers, flash }: Props) {
                             )}
                         </div>
 
+                        {/* Event Type Selection */}
+                        <div className="space-y-2 mb-4">
+                            <Label htmlFor="event_id">Event Type</Label>
+                            <Select
+                                value={data.event_id.toString()}
+                                onValueChange={(value) => setData('event_id', parseInt(value))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select event type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(groupedEvents).map(([eventType, eventList]) => (
+                                        <div key={eventType}>
+                                            {eventList.map((event) => (
+                                                <SelectItem key={event.id} value={event.id.toString()}>
+                                                    <div className="flex justify-between items-center w-full">
+                                                        <span>{event.event_type}</span>
+                                                        <span className="text-sm text-gray-500 ml-2">({event.code})</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.event_id && (
+                                <p className="text-red-600">{errors.event_id}</p>
+                            )}
+                        </div>
+                        <div className="space-y-2 mb-4">
+    <Label htmlFor="discount">Discount (%)</Label>
+    <Select
+        value={data.discount.toString()}
+        onValueChange={(value) => setData('discount', parseInt(value))}
+    >
+        <SelectTrigger>
+            <SelectValue placeholder="Select discount percentage" />
+        </SelectTrigger>
+        <SelectContent>
+            {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((percentage) => (
+                <SelectItem key={percentage} value={percentage.toString()}>
+                    {percentage}%
+                </SelectItem>
+            ))}
+        </SelectContent>
+    </Select>
+    {errors.discount && (
+        <p className="text-red-600">{errors.discount}</p>
+    )}
+</div>
                         <div className="flex space-x-4 mb-4">
                             <label className="inline-flex items-center">
                                 <input

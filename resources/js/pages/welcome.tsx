@@ -7,11 +7,16 @@ export default function Welcome() {
 
     const getDashboardRoute = () => {
         if (hasRole('admin')) {
+            return 'admin.dashboard'
+        } else if (hasRole('sales')) {
             return 'dashboard'
         } else if (hasRole('kanit')) {
             return 'kanit.dashboard'
+        } else if (hasRole('pic')) {
+            return 'pic.dashboard'
         }
-        return 'pic.dashboard'
+        // Fallback for users without roles or unrecognized roles
+        return 'dashboard'
     }
 
     return (
